@@ -3,15 +3,13 @@
 .vscode/
 *.iml
 
-# Java / Maven build outputs
+# Java / Maven
 **/target/
 **/build-output/
 **/release-output/
-
-# This file contains a machine-specific Maven cache path.
 backend/.mvn/maven.config
 
-# Frontend dependencies and build outputs
+# Frontend
 frontend/node_modules/
 frontend/dist/
 

@@ -1,5 +1,7 @@
 # Java AI 智能学习助手
 
+[![CI](https://github.com/766lan-sketch/ai-study-assistant-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/766lan-sketch/ai-study-assistant-rag/actions/workflows/ci.yml)
+
 一个面向 Java 初学者的前后端分离学习项目。系统从本地 Java 知识库检索相关资料，将检索结果作为上下文交给 DeepSeek 生成回答，并把对话和引用来源保存到本地数据库。
 
 ![学习助手主界面](docs/dashboard.png)
@@ -12,7 +14,10 @@
 - **大模型增强回答**：将检索内容与用户问题组合成提示词，通过 Java `HttpClient` 调用 DeepSeek API。
 - **无密钥可运行**：未配置 API Key 或模型调用失败时，返回本地知识库中的匹配内容。
 - **来源可追溯**：接口返回知识来源，前端可展开查看引用片段。
+- **离线 RAG 评测**：内置七类 Java 问题集，计算检索 Top-1 命中率，并返回每条用例的预期与实际结果。
 - **对话持久化**：使用 Spring Data JPA 与 H2 保存问题、回答、来源和创建时间。
+- **自动化测试与持续集成**：使用 JUnit 验证 RAG 检索逻辑，GitHub Actions 自动执行后端测试和前端构建。
+- **容器化交付**：提供前后端多阶段 Docker 构建与 Compose 编排，降低项目运行门槛。
 - **前后端分离**：Spring Boot 提供 REST API，Vue 页面实现任务清单、问答和历史记录管理。
 
 > 本项目的 RAG 使用关键词匹配，不包含 Embedding 或向量数据库；适合展示检索、上下文增强和降级流程的基础实现。
@@ -26,7 +31,7 @@
 | AI 接入 | DeepSeek API、Java HttpClient |
 | 检索 | Markdown 本地知识库、关键词评分 |
 | 前端 | Vue 3、Vite、Fetch API |
-| 工程化 | Maven、npm、Git |
+| 工程化 | Maven、npm、Docker Compose、GitHub Actions |
 
 ## 处理流程
 
@@ -69,6 +74,7 @@ ai-study-assistant/
 | POST | `/api/study/chat` | 提问并返回回答与知识来源 |
 | GET | `/api/study/history` | 查询最多 20 条历史记录 |
 | DELETE | `/api/study/history` | 清空聊天记录 |
+| GET | `/api/study/rag/evaluation` | 运行离线检索评测并返回 Top-1 命中率 |
 
 请求示例：
 
@@ -97,6 +103,12 @@ $env:DEEPSEEK_API_KEY="你的_API_Key"
 
 不要把真实密钥写入源码或提交到 GitHub。
 
+也可以复制根目录的 `.env.example` 为 `.env` 后填写密钥。离线评测不调用 DeepSeek，不会消耗 API 额度：
+
+```text
+GET http://localhost:18080/api/study/rag/evaluation
+```
+
 ### 启动后端
 
 ```powershell
@@ -115,6 +127,18 @@ npm run dev
 ```
 
 浏览器访问：`http://localhost:5173`
+
+### Docker 一键启动
+
+```powershell
+docker compose up --build
+```
+
+启动完成后访问 `http://localhost:5173`。未配置 DeepSeek API Key 时，系统仍会使用知识库检索结果完成本地降级回答。
+
+### 自动化验证
+
+后端执行 `mvn test`，前端执行 `npm ci` 和 `npm run build`。GitHub Actions 会在每次推送和 Pull Request 时自动执行这些检查。
 
 ## 数据与隐私
 
